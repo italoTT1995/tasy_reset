@@ -1,0 +1,16 @@
+# Ambientes Virtuais
+.venv/
+venv/
+env/
+
+# Cache Python
+__pycache__/
+*.pyc
+
+# Logs e Mídias temporárias
+logs/
+screenshots/
+*.log
+
+# Arquivos de Configuração Secretos
+.env
