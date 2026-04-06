@@ -1,6 +1,5 @@
 import customtkinter as ctk
 import threading
-import sys
 from utils.logger import logger
 from services.tasy_service import run_tasy_reset
 
@@ -13,7 +12,7 @@ class App(ctk.CTk):
         super().__init__()
 
         self.title("Tasy Password Reset v1.0")
-        self.geometry("450x550")
+        self.geometry("450x620")
         self.resizable(False, False)
 
         # Header
@@ -41,11 +40,20 @@ class App(ctk.CTk):
         self.btn_run = ctk.CTkButton(self, text="▶ Executar Redefinição", height=40, font=ctk.CTkFont(weight="bold"), command=self.start_automation)
         self.btn_run.pack(pady=10, padx=20, fill="x")
 
+        # ── Barra de Progresso ──────────────────────────────────────────
+        self.progress_bar = ctk.CTkProgressBar(self, width=400, height=12, mode="indeterminate")
+        self.progress_bar.pack(pady=(0, 4), padx=20, fill="x")
+        self.progress_bar.set(0)  # começa zerada
+
+        self.lbl_status = ctk.CTkLabel(self, text="Aguardando execução...", font=ctk.CTkFont(size=11), text_color="gray")
+        self.lbl_status.pack(pady=(0, 6))
+        # ───────────────────────────────────────────────────────────────
+
         # Terminal Box (Logs)
         self.terminal_label = ctk.CTkLabel(self, text="Terminal de Execução:", font=ctk.CTkFont(size=12, slant="italic"))
-        self.terminal_label.pack(pady=(15, 0), padx=20, anchor="w")
+        self.terminal_label.pack(pady=(6, 0), padx=20, anchor="w")
         
-        self.log_box = ctk.CTkTextbox(self, width=400, height=220, state="disabled", fg_color="#121212", text_color="#00FF00")
+        self.log_box = ctk.CTkTextbox(self, width=400, height=200, state="disabled", fg_color="#121212", text_color="#00FF00")
         self.log_box.pack(pady=(5, 20), padx=20, fill="both", expand=True)
 
         # Hook do loguru na interface
@@ -65,14 +73,24 @@ class App(ctk.CTk):
             sucesso = run_tasy_reset(user, pwd)
             if sucesso:
                 logger.info("✨ PROCESSO FINALIZADO COM SUCESSO! ✨")
+                self._set_status("✅ Concluído com sucesso!", "#2ecc71")
             else:
                 logger.error("❌ PROCESSO TERMINADO COM FALHA.")
+                self._set_status("❌ Falha na execução. Veja os logs.", "#e74c3c")
         except Exception as e:
             logger.error(f"Erro Crítico de Exceção: {str(e)}")
+            self._set_status("❌ Erro crítico. Veja os logs.", "#e74c3c")
         finally:
+            # Para a animação da barra
+            self.progress_bar.stop()
+            self.progress_bar.set(1 if "Concluído" in self.lbl_status.cget("text") else 0)
             self.btn_run.configure(state="normal", text="▶ Executar Redefinição")
             self.ent_user.configure(state="normal")
             self.ent_pass.configure(state="normal")
+
+    def _set_status(self, texto: str, cor: str):
+        """Atualiza o label de status com cor dinâmica"""
+        self.lbl_status.configure(text=texto, text_color=cor)
 
     def start_automation(self):
         user = self.ent_user.get().strip()
@@ -81,6 +99,11 @@ class App(ctk.CTk):
         if not user or not pwd:
             logger.warning("Por favor, preencha Usuário e a Nova Senha.")
             return
+
+        # Resetar status e barra
+        self._set_status("🔄 Robô em execução...", "#3498db")
+        self.progress_bar.set(0)
+        self.progress_bar.start()  # Animação indeterminate (vai e volta)
 
         # Bloquear inputs para não causar double run
         self.btn_run.configure(state="disabled", text="⏳ Rodando (Veja os Logs)...")
