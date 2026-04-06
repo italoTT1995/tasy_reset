@@ -6,7 +6,7 @@ from config.settings import TASY_URL, ADMIN_USER, ADMIN_PASSWORD
 from utils.logger import logger
 
 class TasyService:
-    def __init__(self, headless: bool = False):
+    def __init__(self, headless: bool = True):
         self.playwright: Playwright = None
         self.browser: Browser = None
         self.page: Page = None
@@ -238,7 +238,7 @@ class TasyService:
 
 def run_tasy_reset(usuario: str, nova_senha: str) -> bool:
     """Função orquestradora (Retry + Execução + Passo 7 Log/Validação)."""
-    service = TasyService(headless=False)
+    service = TasyService(headless=True)
     sucesso = False
     
     # Retry Simples
