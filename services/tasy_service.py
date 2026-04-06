@@ -173,42 +173,45 @@ class TasyService:
     def passo_6_alterar_senha(self, nova_senha: str):
         """
         PASSO 6 — ALTERAÇÃO DE SENHA
+        Fluxo: Preenche campo senha → clica OK (1º modal) → clica OK (2º modal de confirmação)
         """
         try:
-            logger.info("Aguardando carregamento da modal de troca de senha...")
-            
-            # A modal deve conter campos password. 
-            inputs_senha = self.page.locator("input[type='password']:visible")
-            inputs_senha.first.wait_for(state="visible", timeout=10000)
-            
-            n_fields = inputs_senha.count()
-            logger.info(f"Localizados {n_fields} campos de senha. Inserindo nova senha em ambos.")
-            
-            if n_fields == 0:
-                raise ValueError("Modal abriu mas não há boxes de senha visíveis.")
-            
-            # Preenche iterativamente as boxes existentes
-            for i in range(n_fields):
-                box = inputs_senha.nth(i)
-                box.click(click_count=3)
-                box.fill(nova_senha)
+            logger.info("Aguardando o 1º modal 'Alterar senha' aparecer...")
 
-            # Localizar confirmar/salvar cruzando labels
-            btn_salvar = self.page.locator("button:has-text('Salvar'), button:has-text('Confirmar'), button:has-text('OK')").first
-            
-            if not btn_salvar.is_visible():
-                 raise Exception("Botão de Salvar/Confirmar não foi localizado no popup.")
+            # Espera o campo de senha do 1º modal ficar visível
+            campo_senha = self.page.locator("input[type='password']:visible").first
+            campo_senha.wait_for(state="visible", timeout=15000)
 
-            logger.info("Salvando nova senha no banco...")
-            btn_salvar.click()
-            
-            # Aguarda a toast message ou loading mask
+            logger.info("Campo de senha localizado. Preenchendo nova senha...")
+            campo_senha.click(click_count=3)
+            campo_senha.fill(nova_senha)
+
+            # ── 1º OK ──────────────────────────────────────────────────
+            logger.info("Clicando em OK no 1º modal...")
+            btn_ok1 = self.page.locator("button:has-text('OK')").first
+            btn_ok1.wait_for(state="visible", timeout=5000)
+            btn_ok1.click()
+
+            # ── 2º modal de confirmação ─────────────────────────────────
+            logger.info("Aguardando 2º modal de confirmação...")
+            self.page.wait_for_timeout(1500)
+
+            btn_ok2 = self.page.locator("button:has-text('OK')").first
+            if btn_ok2.is_visible(timeout=8000):
+                logger.info("2º modal detectado. Clicando em OK para confirmar...")
+                btn_ok2.click()
+            else:
+                logger.warning("2º modal não apareceu. Pode já ter sido fechado automaticamente.")
+
+            # Aguarda sistema processar
             self.page.wait_for_load_state("networkidle")
-            
+            logger.info("✅ Senha alterada com sucesso!")
+
         except Exception as e:
             logger.error(f"Erro no PASSO 6 (Alteração de Senha): {str(e)}")
             self.tirar_screenshot_erro("passo_6_alterar_senha")
             raise
+
 
     def logout_e_encerrar(self):
         """
