@@ -100,27 +100,27 @@ class TasyService:
         try:
             logger.info(f"Localizando o campo 'Usuário' para pesquisar por: {login_usuario}")
             
-            # Filtrar e pegar inputs - Em Tasy Angular são inputs geralmente identificados pelo placeholder ou label préximo
-            # Tenta placeholder ou fallback para primeira caixa
-            input_user = self.page.locator("input[placeholder*='Usuário' i]:visible, input[type='text']:visible").first
-            input_user.wait_for(state="visible", timeout=20000)
+            # Recupera as caixas e foca na 2ª caixa. 
+            # Fisicamente no Tasy: A 1ª caixa (índice 0) é "Nome". A 2ª caixa (índice 1) é "Usuário".
+            inputs = self.page.locator("input[type='text']:visible")
+            inputs.first.wait_for(state="visible", timeout=20000)
             
-            logger.info("Preeenchendo login do alvo...")
+            input_user = inputs.nth(1)
+            
+            logger.info("Preeenchendo login do alvo na caixa 'Usuário'...")
             input_user.click(click_count=3)
             input_user.fill(login_usuario)
             
-            logger.info("Pressionando 'Filtrar' ou 'Enter'...")
-            # Pela estabilidade AngularJS, as vezes o ENTER não gera evento de change completo se for custom scope,
-            # Força o tab para disparar blur() e ng-change, e depois pressiona enter, e finalmente clica em Filtrar.
+            logger.info("Pressionando 'Filtrar' ou clique verde...")
             input_user.press("Tab")
             input_user.press("Enter")
             
-            # Clique no botão caso já exista na interface
-            botao_filtrar = self.page.locator("button:has-text('Filtrar'), button[title*='Filtrar' i]").first
-            if botao_filtrar.is_visible(timeout=2000):
+            # Clique no botão verde 'Filtrar' na parte de baixo
+            botao_filtrar = self.page.locator("button:has-text('Filtrar'), button[title*='Filtrar' i]").last
+            if botao_filtrar.is_visible(timeout=3000):
                  botao_filtrar.click()
                  
-            self.page.wait_for_load_state("networkidle") # Aguarda as XHR JSON Calls voltarem
+            self.page.wait_for_load_state("networkidle") 
             
         except Exception as e:
             logger.error(f"Erro no PASSO 3 (Filtrar Usuário): {str(e)}")
