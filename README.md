@@ -57,4 +57,29 @@ Se você acabou de baixar (clonar) este repositório para ajudar no projeto, sig
 4. **Modo Visual (Debug):**
    - Se precisar ver o robô trabalhando, abra o arquivo `services/tasy_service.py` e procure a linha onde existe o `headless=False` na chamada base e modifique para true ou vice-versa.
    
+---
+
+## 🚀 Como Enviar Atualizações (Para toda a Equipe)
+
+Sempre que você ou seu colega terminarem de escrever um bloco de código novo ou consertarem um bug, sigam este roteiro sagrado para "postar" a atualização no GitHub sem conflitos:
+
+1. **Puxe as novidades (Antes de codar):**
+   *Antes de começar o dia de trabalho*, rode isto para garantir que seu computador tem o código que seu colega subiu na noite anterior:
+   ```bash
+   git pull origin main
+   ```
+
+2. **Salve no cofre local (Após codar):**
+   ```bash
+   git add .
+   git commit -m "feat: descricao curta do que foi ajustado ou adicionado"
+   ```
+
+3. **Suba para a nuvem do GitHub (Push):**
+   ```bash
+   git push origin main
+   ```
+   
+> **Dica de ouro:** O arquivo `.env` (onde ficam as senhas do hospital) não sobe para a tela dos colegas pelo push. Ele é travado. Cada um gerencia o seu próprio cofre na sua máquina.
+
 Bem vindo ao projeto!
