@@ -134,19 +134,14 @@ class TasyService:
         try:
             logger.info(f"Aprocurando na tabela de usuários pela linha com o texto: '{login_usuario}'")
             
-            # Procura pela linha dentro da tabela. 
-            row_locator = self.page.locator(f"tr:has-text('{login_usuario}')").first
-            
-            # Aguarda a linha ficar visível, e se expirar avisa que não encontrou controladamente.
+            # Apenas aguarda o usuário aparecer visualmente na tela para ter certeza de que o filtro deu certo
+            usuario_celula = self.page.get_by_text(login_usuario, exact=True).last
             try:
-                row_locator.wait_for(state="visible", timeout=15000)
+                usuario_celula.wait_for(state="visible", timeout=15000)
             except Exception:
-                raise ValueError(f"Usuário {login_usuario} não foi encontrado no sistema ou tabela não renderizou a tempo.")
+                raise ValueError(f"Usuário {login_usuario} não apareceu na lista após o filtro.")
             
-            logger.info("Usuário validado e encontrado. Selecionando linha...")
-            row_locator.click(button="left") # Clica com esquerdo para marcar no escopo
-            
-            # Aguarda o active state acionar do CSS do Angular
+            logger.info("Usuário validado visualmente na tela! Preparando o atalho...")
             self.page.wait_for_timeout(500)
             
         except Exception as e:
@@ -156,34 +151,22 @@ class TasyService:
 
     def passo_5_abrir_menu_acoes(self, login_usuario: str):
         """
-        PASSO 5 — MENU CONTEXTUAL
+        PASSO 5 — ACIONAR ATALHO (ALTERAR SENHA)
         """
         try:
-            logger.info("Executando clique com Botão Direito do mouse no usuário...")
+            logger.info("Ativando o super atalho nativo do Tasy (Ctrl + F10)...")
             
-            row_locator = self.page.locator(f"tr:has-text('{login_usuario}')").first
-            # Fazer clique na linha
-            row_locator.click(button="right")
+            # Uma respiração super leve pro Tasy registrar que a tabela está em foco pelo clique anterior
+            self.page.wait_for_timeout(800)
             
-            # Aguardar render do menu customizado sobrepondo a tela
-            # Menu de ações ExtJS/Angular do tasy geralmente é desancorado.
-            menu_alterar = self.page.get_by_text("Alterar senha", exact=False).last
+            # Golpe fatal do atalho global
+            self.page.keyboard.press("Control+F10")
             
-            logger.info("Aguardando popup com opções expandir na tela...")
-            if not menu_alterar.is_visible(timeout=5000):
-               # Fallback para caso o mouseout cortou a sub-aba, usar eval / force
-               row_locator.click(button="right", force=True, delay=200)
-               menu_alterar.wait_for(state="visible", timeout=10000)
-
-            # Validação solicitada antes de interagir
-            if menu_alterar.is_visible():
-                logger.info("Opção 'Alterar senha' localziada e visível. Clicando...")
-                menu_alterar.click()
-            else:
-                raise ValueError("Menu de Alterar Senha explodiu e ficou invisível antes do click.")
+            logger.info("Sinal Ctrl+F10 enviado com sucesso! O modal de senha deve estar carregando.")
+            self.page.wait_for_timeout(1000)
             
         except Exception as e:
-            logger.error(f"Erro no PASSO 5 (Menu Contextual): {str(e)}")
+            logger.error(f"Erro no PASSO 5 (Acionar Atalho): {str(e)}")
             self.tirar_screenshot_erro("passo_5_abrir_menu_acoes")
             raise
 
