@@ -2,15 +2,17 @@ import os
 import time
 from datetime import datetime
 from playwright.sync_api import sync_playwright, Page, Browser, Playwright
-from config.settings import TASY_URL, ADMIN_USER, ADMIN_PASSWORD
+from config.settings import TASY_URL
 from utils.logger import logger
 
 class TasyService:
-    def __init__(self, headless: bool = True):
+    def __init__(self, admin_user: str, admin_password: str, headless: bool = True):
         self.playwright: Playwright = None
         self.browser: Browser = None
         self.page: Page = None
         self.headless = headless
+        self.admin_user = admin_user
+        self.admin_password = admin_password
         
     def start(self):
         """Inicializa o Playwright e o Browser."""
@@ -51,10 +53,10 @@ class TasyService:
             input_senha = self.page.locator("input[type='password']:visible").first
             
             input_usuario.wait_for(state="visible", timeout=30000)
-            input_usuario.fill(ADMIN_USER)
+            input_usuario.fill(self.admin_user)
             
             input_senha.wait_for(state="visible", timeout=5000)
-            input_senha.fill(ADMIN_PASSWORD)
+            input_senha.fill(self.admin_password)
             
             logger.info("Clicando em Entrar...")
             botao_entrar = self.page.locator("button:has-text('Entrar'), button[type='submit'], button:has-text('Login')").first
@@ -236,9 +238,9 @@ class TasyService:
                 self.playwright.stop()
             logger.info("Sessão finalizada controladamente.")
 
-def run_tasy_reset(usuario: str, nova_senha: str) -> bool:
+def run_tasy_reset(usuario: str, nova_senha: str, admin_user: str = "", admin_password: str = "") -> bool:
     """Função orquestradora (Retry + Execução + Passo 7 Log/Validação)."""
-    service = TasyService(headless=True)
+    service = TasyService(admin_user=admin_user, admin_password=admin_password, headless=True)
     sucesso = False
     
     # Retry Simples
