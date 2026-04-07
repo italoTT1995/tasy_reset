@@ -81,6 +81,14 @@ class TasyService:
         """
         try:
             logger.info("Aguardando carregamento da tela principal...")
+            
+            # Verificação de popups de aviso/erro logo após o login (ex: "Perfis não encontrados")
+            btn_ok_aviso = self.page.locator("button:has-text('OK')").first
+            if btn_ok_aviso.is_visible(timeout=5000):
+                logger.warning("Popup de aviso detectado ('Perfis não encontrados' ou similar). Clicando em OK para prosseguir...")
+                btn_ok_aviso.click()
+                self.page.wait_for_timeout(1000)
+
             # Angular renderiza os modulos assimicronamente
             self.page.wait_for_selector("text='Administração do Sistema'", state="visible", timeout=60000)
             
@@ -240,7 +248,7 @@ class TasyService:
 
 def run_tasy_reset(usuario: str, nova_senha: str, admin_user: str = "", admin_password: str = "") -> bool:
     """Função orquestradora (Retry + Execução + Passo 7 Log/Validação)."""
-    service = TasyService(admin_user=admin_user, admin_password=admin_password, headless=True)
+    service = TasyService(admin_user=admin_user, admin_password=admin_password, headless=False)
     sucesso = False
     
     # Retry Simples
